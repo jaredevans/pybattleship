@@ -4,9 +4,11 @@ Console-based curses app of the Battleship game
 Single player mode.
 
 Initial Game
+
 ![Initial Screen](https://i.imgur.com/i7qzqwD.png)
 
 Completed Game
+
 ![Completed Screen](https://i.imgur.com/yshgSI1.png)
 
 Here’s a line‑by‑line walkthrough of how this terminal Battleship game is constructed and how it runs:
@@ -30,8 +32,10 @@ A dictionary mapping ship length → number of ships of that length.
 
 2️⃣ Placing the Fleet (place_fleet)
 
-`def place_fleet(size=10):
-    grid = [["~"]*size for _ in range(size)]`
+```
+def place_fleet(size=10):
+    grid = [["~"]*size for _ in range(size)]
+```
 
 Initializes a **size×size grid** filled with "~" (water).
 
