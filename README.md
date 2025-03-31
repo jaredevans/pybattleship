@@ -5,11 +5,12 @@ Player vs Computer mode.
 
 Initial Game
 
-![Initial Screen](https://i.imgur.com/KuwN02o.png)
+
+<img src="https://i.imgur.com/KuwN02o.png" width=400 height=800>
 
 Completed Game
 
-![Completed Screen](https://i.imgur.com/BQuWf15.png)
+<img src="https://i.imgur.com/BQuWf15.png" width=500 height=800>
 
 This game is a simple implementation of Battleship using Python’s built-in curses module for a text-based user interface. Here’s a detailed breakdown of its components and flow:
 
