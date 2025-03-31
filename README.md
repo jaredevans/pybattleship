@@ -66,12 +66,12 @@ Initialization in play Function:
 
 	* The player moves a targeting cursor across the enemy board using arrow keys.
 
-* Pressing the spacebar fires a shot at the current cursor position:
-
-	* If there is a ship ("S") in comp_fleet, that cell in comp_display is marked as a hit ("X").
-	* Otherwise, it is marked as a miss ("O").
-
-* After each shot, the game checks if all enemy ship cells have been hit (win condition for the player).
+	* Pressing the spacebar fires a shot at the current cursor position:
+	
+		* If there is a ship ("S") in comp_fleet, that cell in comp_display is marked as a hit ("X").
+		* Otherwise, it is marked as a miss ("O").
+	
+	* After each shot, the game checks if all enemy ship cells have been hit (win condition for the player).
 
 * Computer Turn:
 
