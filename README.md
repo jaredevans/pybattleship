@@ -34,7 +34,7 @@ This game is a simple implementation of Battleship using Python’s built-in cur
 	
 	* "~" (water) is shown as a wave emoji.
 	* "S" (ship) is represented as a ship emoji (only visible on the player’s board).
-	* "X" and "O" are used for hits and misses respectively.
+	* "X" (flame) and "O" are used for hits and misses respectively.
 
 * draw_grid Function:
 	
