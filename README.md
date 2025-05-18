@@ -1,7 +1,7 @@
 # pybattleship
 Console-based curses app of the Battleship game!
 
-Player vs Computer mode.
+Player vs Computer mode. Now, with animated explosion effect for the last ship!
 
 Initial Game
 
