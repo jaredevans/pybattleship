@@ -5,12 +5,15 @@ Player vs Computer mode. Now, with animated explosion effect for the last ship!
 
 Initial Game
 
-
 <img src="https://i.imgur.com/KuwN02o.png" width=400 height=800>
 
 Completed Game
 
 <img src="https://i.imgur.com/BQuWf15.png" width=500 height=800>
+
+Animated explosion of the game-ending move:
+
+<img src="https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExeWI0MmM2bnp1dXBoMmIyamZneWxqMzI0NHZlbDNmOHFlazBtdGl0OCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/2t4wS8EGhBSXpAAMYG/giphy.gif" width=500 height=600>
 
 This game is a simple implementation of Battleship using Python’s built-in curses module for a text-based user interface. Here’s a detailed breakdown of its components and flow:
 
