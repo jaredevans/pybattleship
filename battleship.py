@@ -1,4 +1,6 @@
-import curses, random
+import curses
+import random
+import time
 
 FLEET = {2: 3, 3: 2, 4: 2, 5: 1}
 
@@ -23,7 +25,6 @@ def place_fleet(size=10):
                     placed = True
     return grid
 
-# ICONS mapping. On the player's board, the ship ("S") is shown as a ship icon.
 ICONS = {
     "~": ("🌊", 1),
     "S": ("🚢", 4),  # player's ship visible on their board
@@ -52,10 +53,8 @@ def draw_grid(stdscr, grid, header, cursor=None):
 
 def draw_boards(stdscr, comp_display, comp_cursor, player_display, win_message=None):
     stdscr.clear()
-    # Draw enemy board (player's target)
     draw_grid(stdscr, comp_display, "Enemy Board (Your Target)", comp_cursor)
     stdscr.addstr("\n")
-    # Modify the header for player's board if there's a win message
     if win_message:
         header = f"Your Board - {win_message}"
     else:
@@ -75,39 +74,122 @@ def neighbors(r, c, size):
         nbrs.append((r, c + 1))
     return nbrs
 
+def animate_explosion(stdscr, loser):
+    BATTLESHIP = [
+        "    |\\_____________________/|    ",
+        "   /                         \\   ",
+        "  /___________________________\\  ",
+        f"  \\   === {loser.upper()} SHIP ===   /  ",
+        "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    ]
+    EXPLOSION_FRAMES = [
+        [
+            "         (  )   (   )  )      ",
+            "          ) (   )  (  (       ",
+            "          ( )  (    ) )       ",
+            "        _.-'~~~~~`-._         ",
+            "     .-~===========~-._       ",
+            "    (  BOOM! BOOM!    )       ",
+            "     `-._    ~~~~~~.-'        ",
+            "          `---'               "
+        ],
+        [
+            "           ( (      (  )      ",
+            "         ) ) )   ) ) )        ",
+            "        ( ( (   ( ( (         ",
+            "      .-~~~~~~~~~~~~~-.       ",
+            "   .-~   FIRE & FLAMES  ~-.   ",
+            "  (   BBBBOOOOOOMMMMM!!!   )  ",
+            "   `-._    ~~~~~~~   _.-'     ",
+            "        `--._____.--'         "
+        ],
+        [
+            "    *  *    *   *     *  *    ",
+            "   *  *  ASHES & SMOKE  * *   ",
+            "    *   *   *  *   *   *  *   ",
+            "    .-~~~~~~~~~~~~~~-.        ",
+            "  (      ship hit!     )      ",
+            "    `-.____________.-'        "
+        ]
+    ]
+    max_y, max_x = stdscr.getmaxyx()
+    ship_y = max_y // 2 - 8
+    ship_x = (max_x - len(BATTLESHIP[0])) // 2
+
+    def draw_water():
+        for i in range(ship_y + len(BATTLESHIP), max_y):
+            stdscr.addstr(i, 0, "~" * (max_x - 1), curses.color_pair(1))
+
+    def draw_ship(offset=0):
+        for idx, line in enumerate(BATTLESHIP):
+            stdscr.addstr(ship_y + idx + offset, ship_x, line, curses.color_pair(3) | curses.A_BOLD)
+
+    missile_x = ship_x + len(BATTLESHIP[0]) // 2
+    missile_y = 2
+
+    # Animate missile falling
+    for y in range(missile_y, ship_y + 2):
+        stdscr.clear()
+        draw_water()
+        draw_ship()
+        stdscr.addstr(y, missile_x, "|", curses.color_pair(4) | curses.A_BOLD)
+        stdscr.refresh()
+        time.sleep(0.03)
+
+    # Draw each frame with correct color
+    for frame_num, frame in enumerate(EXPLOSION_FRAMES):
+        stdscr.clear()
+        draw_water()
+        draw_ship(offset=1 if frame_num < 2 else 2)
+        if frame_num == 0:
+            color = curses.color_pair(2) | curses.A_BOLD   # red, fire/explosion
+        elif frame_num == 1:
+            color = curses.color_pair(7) | curses.A_BOLD   # bright orange (pair 7)
+        else:
+            color = curses.color_pair(6) | curses.A_DIM    # gray/dim, ashes/smoke
+        for idx, line in enumerate(frame):
+            y = ship_y + 2 + idx if frame_num < 2 else ship_y + 3 + idx
+            stdscr.addstr(y, missile_x - len(line)//2, line, color)
+        stdscr.refresh()
+        time.sleep(0.45 if frame_num < 2 else 0.85)
+
 def play(stdscr):
     curses.curs_set(0)
     curses.start_color()
     curses.use_default_colors()
-    curses.init_pair(1, curses.COLOR_CYAN, -1)    # water
-    curses.init_pair(2, curses.COLOR_RED, -1)     # hit
-    curses.init_pair(3, curses.COLOR_YELLOW, -1)  # miss
-    curses.init_pair(4, curses.COLOR_GREEN, -1)   # player's ship
+    
+    curses.init_pair(1, curses.COLOR_CYAN, -1)      # water
+    curses.init_pair(2, curses.COLOR_RED, -1)       # fire/explosion (red)
+    curses.init_pair(3, curses.COLOR_WHITE, -1)     # ship (white)
+    curses.init_pair(4, curses.COLOR_YELLOW, -1)    # missile (yellow)
+    curses.init_pair(5, curses.COLOR_MAGENTA, -1)   # backup/fallback
+
+    if curses.COLORS >= 256:
+        curses.init_pair(6, 244, -1)    # gray for ashes/smoke
+        curses.init_pair(7, 214, -1)    # orange for explosion
+    else:
+        curses.init_pair(6, curses.COLOR_BLACK, -1) # fallback: black/dim
+        curses.init_pair(7, curses.COLOR_YELLOW, -1) # fallback: yellow for orange
 
     size = 10
-    # Computer's board (hidden to the player) and player's view of it.
     comp_fleet = place_fleet(size)
     comp_display = [["~"] * size for _ in range(size)]
-    
-    # Player's board (visible to the player) - ships are shown.
     player_fleet = place_fleet(size)
     player_display = [row[:] for row in player_fleet]
-
-    # Player's targeting cursor on the enemy board.
     comp_cursor = (0, 0)
-    
-    # For the computer's hunt/target algorithm:
     computer_moves = set()
     target_stack = []
 
-    # Main game loop: player goes first, then computer's turn.
     while True:
         draw_boards(stdscr, comp_display, comp_cursor, player_display)
         key = stdscr.getch()
         r, c = comp_cursor
-        # Player controls
         if key in (ord("q"), ord("Q")):
             break
+        elif key == ord("e"):
+            animate_explosion(stdscr, "test")
+            draw_boards(stdscr, comp_display, comp_cursor, player_display)
+            continue
         elif key == curses.KEY_UP and r > 0:
             comp_cursor = (r - 1, c)
         elif key == curses.KEY_DOWN and r < size - 1:
@@ -116,7 +198,6 @@ def play(stdscr):
             comp_cursor = (r, c - 1)
         elif key == curses.KEY_RIGHT and c < size - 1:
             comp_cursor = (r, c + 1)
-        # Player fires a shot on the enemy board.
         elif key == ord(" ") and comp_display[r][c] == "~":
             if comp_fleet[r][c] == "S":
                 comp_display[r][c] = "X"
@@ -124,25 +205,21 @@ def play(stdscr):
                 comp_display[r][c] = "O"
             # Check if player sank all enemy ships.
             if all(comp_display[i][j] == "X" for i in range(size) for j in range(size) if comp_fleet[i][j] == "S"):
+                animate_explosion(stdscr, "computer")
                 draw_boards(stdscr, comp_display, comp_cursor, player_display,
                             "🎉 You sank the enemy fleet! Press any key to exit.")
                 stdscr.getch()
                 break
 
             # --- Computer's Turn ---
-            curses.napms(500)  # brief pause before computer's move
-
-            # Determine computer's move.
+            curses.napms(500)
             move = None
-            # Use target cells if available.
             if target_stack:
                 move = target_stack.pop(0)
-                # Ensure the move hasn't been tried already.
                 while move in computer_moves and target_stack:
                     move = target_stack.pop(0)
                 if move in computer_moves:
                     move = None
-            # If no target, use hunt mode (choose among parity cells).
             if move is None:
                 possible = [(i, j) for i in range(size) for j in range(size)
                             if (i, j) not in computer_moves and (i + j) % 2 == 0]
@@ -152,20 +229,17 @@ def play(stdscr):
                 move = random.choice(possible)
             computer_moves.add(move)
             pr, pc = move
-
-            # Evaluate computer's shot on the player's board.
             if player_fleet[pr][pc] == "S":
                 player_display[pr][pc] = "X"
-                # Add valid neighbors for targeting.
                 for nbr in neighbors(pr, pc, size):
                     if nbr not in computer_moves and nbr not in target_stack:
                         target_stack.append(nbr)
             else:
                 if player_display[pr][pc] == "~":
                     player_display[pr][pc] = "O"
-
             # Check if computer sank all player's ships.
             if all(player_display[i][j] == "X" for i in range(size) for j in range(size) if player_fleet[i][j] == "S"):
+                animate_explosion(stdscr, "player")
                 draw_boards(stdscr, comp_display, comp_cursor, player_display,
                             "😞 The computer sank your fleet! Press any key to exit.")
                 stdscr.getch()
@@ -173,3 +247,4 @@ def play(stdscr):
 
 if __name__ == "__main__":
     curses.wrapper(play)
+
